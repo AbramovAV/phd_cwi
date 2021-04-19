@@ -3,7 +3,7 @@
 This module contains the class(es) and functions that implement the CWI baseline model.
 
 """
-
+import joblib
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
 from sklearn.feature_extraction import DictVectorizer
@@ -84,7 +84,7 @@ class MonolingualCWI(object):
         print_x_importances(importances_dest, 100)
         
 
-    def predict(self, test_set):
+    def predict(self, test_set, threshold = 0.5):
         """Predicts the label for the given instances.
 
         Args:
@@ -97,5 +97,11 @@ class MonolingualCWI(object):
         """
 
         X = self.features_pipeline.transform(test_set)
+        probs = self.model.predict_proba(X)
+        return (probs[:,1]>=threshold).astype(int), probs
 
-        return self.model.predict(X)
+    def export_model(self, filename):
+        joblib.dump(self.model, filename)
+
+    def load_model(self, filename):
+        self.model = joblib.load(filename)

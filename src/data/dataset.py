@@ -35,6 +35,7 @@ class Dataset(object):
         self._trainset = None
         self._devset = None
         self._testset = None
+        self._external_testset = None
 
         """spaCy object handling"""
         if self._language == "english":
@@ -101,6 +102,19 @@ class Dataset(object):
             self._testset['dataset_name'] = self._dataset_name
 
         return self._testset
+
+    def external_test_set(self,path):
+
+        # if self._external_testset is None:
+        testset_raw = self.read_dataset(f"data/raw/external_datasets/{path}")
+        spacy_path = path.replace(".tsv","-spacy-objs.pkl")
+        testset_spacy = self.read_spacy_pickle(f"data/interim/external_datasets/{spacy_path}")
+        self._external_testset = pd.concat([testset_raw, testset_spacy], axis=1)
+        self._external_testset['language'] = self._language
+        self._external_testset['dataset_name'] = self._dataset_name
+
+        return self._external_testset
+
 
     def read_dataset(self, file_path):
         """Read the dataset file.
