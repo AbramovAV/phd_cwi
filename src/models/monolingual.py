@@ -20,14 +20,19 @@ class MonolingualCWI(object):
 
     """
 
-    def __init__(self, language, ablate):
+    def __init__(self, language, ablate, model='LogReg'):
         """Defines the basic properties of the model.
 
         Args:
             language (str): The language of the data.
 
         """
-        self.model = LogisticRegression(random_state=0)
+        if model == 'LogReg':
+            self.model = LogisticRegression(random_state=0)
+        elif model == 'SVM':
+            self.model = SVC(random_state=0,kernel = 'linear',max_iter=100,verbose=1)
+        else:
+            raise ValueError("Available models are Logistic Regression and SVM")
         self.language = language
         self.ablate = ablate
         self.features_pipeline = self.join_pipelines(language)
@@ -97,8 +102,11 @@ class MonolingualCWI(object):
         """
 
         X = self.features_pipeline.transform(test_set)
-        probs = self.model.predict_proba(X)
-        return (probs[:,1]>=threshold).astype(int), probs
+        if hasattr(self.model,"predict_proba"):
+            probs = self.model.predict_proba(X)
+            return (probs[:,1]>=threshold).astype(int), probs
+        else:
+            return self.model.predict(X), None
 
     def export_model(self, filename):
         joblib.dump(self.model, filename)

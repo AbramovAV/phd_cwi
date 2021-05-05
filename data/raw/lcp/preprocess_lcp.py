@@ -3,29 +3,28 @@ from tqdm import tqdm
 
 COMPLEXITY_THRESHOLD = 0.5
 
-def parse_tsv():
-    dataset = []
-    with open("lcp_train/lcp_single_train.tsv") as fin:
+def parse_tsv(mode='train'):
+    dataset = {}
+    with open(f"/cwi/data/raw/lcp/lcp_train/lcp_single_{mode}.tsv") as fin:
         fin.readline()
         for line in fin:
             id, corpus, sentence, token, complexity = line.split('\t')
-            if corpus != 'bible':
-                break
+            if corpus not in dataset: dataset[corpus] = []
             complexity = float(complexity)
-            dataset.append([id,sentence,token,complexity])
+            dataset[corpus].append([id,sentence,token,complexity])
     return dataset
 
 
-def create_bible_dataset(data):
+def create_dataset(data):
     for i in tqdm(range(len(data))):
         id, sentence, token, complexity = data[i]
         start_pos = sentence.index(token)
         end_pos = start_pos + len(token)
-        complexity = (round(complexity,2) // 0.05) * 0.05
+        complexity = round((round(complexity,2) // 0.05) * 0.05,2)
         binary_tag = int(complexity>=0.5)
         data[i] = [
             id,
-            sentence,
+            sentence.replace("\"",""),
             str(start_pos),
             str(end_pos),
             token,
@@ -38,12 +37,14 @@ def create_bible_dataset(data):
         ]
 
 
-def export_bible_tsv(bible_dataset):
-    with open("lcp_train/lcp_bible_train.tsv",'w') as fout:
-        for record in bible_dataset:
+def export_tsv(dataset, corpus, mode = 'train'):
+    with open(f"/cwi/data/raw/english/lcp_{corpus}_{mode.capitalize()}.tsv",'w') as fout:
+        for record in dataset:
             fout.write("\t".join(record) + "\n")
 
 if __name__=='__main__':
-    bible_dataset = parse_tsv()
-    create_bible_dataset(bible_dataset)
-    export_bible_tsv(bible_dataset)
+    for mode in ['train','test']:
+        dataset = parse_tsv(mode)
+        for corpus in dataset:
+            create_dataset(dataset[corpus])
+            export_tsv(dataset[corpus], corpus, mode)

@@ -43,7 +43,9 @@ def build(infile_path, nlp):
 if __name__ == '__main__':
     #TODO write this stuff in the readme, makedir if dir is missing.
     language = sys.argv[1]
-    todo_external = sys.argv[2]
+    todo_external = None
+    if(len(sys.argv)>2):
+        todo_external = sys.argv[2]
     save_dir = 'data/interim/' + language
     data_path = 'data/raw/' + language
     file_paths = os.listdir(data_path)
